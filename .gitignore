@@ -16,3 +16,9 @@ auth.json
 
 # dev-fresh launcher scratch (fresh-user sim): disposable per launch
 .fresh-data/
+
+# Cargo build targets and native addons
+crates/**/target/
+target/
+native/
+

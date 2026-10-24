@@ -1,0 +1,17 @@
+[package]
+name = "whisper-napi"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "3.15.0", features = ["tokio_rt"] }
+napi-derive = "3.6.13"
+whisper-rs = { version = "0.16.0", features = ["openmp"] }
+dirs = "7.0.0"
+tokio = { version = "1", features = ["rt", "rt-multi-thread"] }
+
+[build-dependencies]
+napi-build = "2.6.0"

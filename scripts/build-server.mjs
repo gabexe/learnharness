@@ -38,6 +38,10 @@ copyTree(staticFrom, staticTo);
 if (exists(path.join(ROOT, "public"))) {
 	copyTree(path.join(ROOT, "public"), path.join(STANDALONE, "public"));
 }
+if (exists(path.join(ROOT, "native"))) {
+	copyTree(path.join(ROOT, "native"), path.join(STANDALONE, "native"));
+}
+
 
 // 2) Safety: the repo's real data/ must NEVER ride along in the bundle.
 const leakedData = path.join(STANDALONE, "data");

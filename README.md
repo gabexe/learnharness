@@ -6,73 +6,143 @@
   </picture>
 </p>
 
-<p align="center"><strong>An agent harness for learning.</strong></p>
+<p align="center"><strong>Un arnés de agentes para el aprendizaje profundo y continuo.</strong></p>
 
 <p align="center">
-  <a href="https://learnharness.ai">Download</a> ·
-  <a href="#how-it-works">How it works</a> ·
-  <a href="docs/development.md">Documentation</a> ·
-  <a href="https://github.com/amosblomqvist/learnharness/issues">Issues</a>
+  <a href="#instalación-en-omarchy--arch-linux">Instalación en Omarchy</a> ·
+  <a href="#cómo-funciona">Cómo funciona</a> ·
+  <a href="#reconocimiento-de-voz-offline-con-rust">Reconocimiento Offline (Rust)</a> ·
+  <a href="docs/development.md">Documentación</a> ·
+  <a href="https://github.com/gabexe/learnharness/issues">Incidencias</a>
 </p>
 
-LearnHarness uses AI agents to plan and teach lessons from your current understanding to your goal. It builds a detailed picture of what you understand and how you reason. That picture is updated as you learn.
+LearnHarness utiliza agentes de inteligencia artificial para diagnosticar, planificar y enseñar lecciones desde tu comprensión actual hasta tu objetivo de dominio. Mantiene un modelo detallado de lo que comprendes y de cómo razonas, actualizándolo dinámicamente con cada intercambio.
 
-Instead of just giving you an explanation, it uses your answers and thinking to decide what you need next. Teaching builds understanding one reasoning step at a time. Practice makes it usable. A persistent knowledge graph carries it across sessions.
+En lugar de limitarse a dar explicaciones estáticas, evalúa tus respuestas y razonamientos para determinar el siguiente paso pedagógico. La enseñanza edifica el entendimiento paso a paso; la práctica deliberada lo consolida y lo hace recuperable; y un grafo de conocimiento persistente preserva tus avances entre sesiones.
 
-![LearnHarness teaching session](docs/assets/teaching-session.png)
+![Sesión pedagógica en LearnHarness](docs/assets/teaching-session.png)
 
-## How it works
+---
 
-1. **Measure.** Before teaching, the agent finds where your understanding ends on each part the lesson depends on. Your answers, confidence, and thinking show it where to start.
-2. **Plan.** It works out a dependency map from that starting point to your goal. You can see the plan, and the lesson adapts when your understanding turns out different.
-3. **Teach.** Each step builds on something you already understand. You predict, get an explanation, and check your understanding. Confusions are repaired before anything is built on them. The aim is for the goal to feel obviously true, not merely familiar.
-4. **Practice.** Separate sessions pose varied problems that require the right knowledge to come to mind without being named first. Problems and hints adapt to your reasoning.
+## Cómo funciona
 
-**Think out loud.** The thinking fields let you explain your reasoning, uncertainties, and reactions in your own words. This is how the agent gets a detailed picture rather than just a record of right and wrong answers. You can type or use dictation.
+1. **Diagnóstico (Probe):** Antes de iniciar la enseñanza, el agente explora dónde termina tu comprensión exacta en cada uno de los prerrequisitos del tema. Tus respuestas, grado de confianza y razonamientos le indican el punto exacto donde comenzar.
+2. **Planificación:** Desarrolla un mapa de dependencias que conecta tus bases sólidas con el objetivo final. El plan es visible y se adapta automáticamente si tu ritmo o comprensión varían.
+3. **Enseñanza activa:** Cada paso se apoya en fundamentos previamente consolidados. Predices, recibes explicaciones adaptativas y verificas tu comprensión. Los conceptos erróneos se corrigen antes de edificar sobre ellos.
+4. **Práctica deliberada:** Sesiones independientes proponen problemas variados que exigen recuperar el conocimiento sin dar pistas obvias. Las pistas y la dificultad se calibran según tu proceso de pensamiento.
 
-The agent can also research questions in the background, create visual explanations, and build interactive demonstrations.
+**Piensa en voz alta:** Los campos de razonamiento te permiten expresar dudas y deducciones con tus propias palabras, ya sea escribiendo o usando dictado por voz.
 
-## Knowledge that carries forward
+---
 
-What you are taught accumulates as propositions and reasoning chains: individual claims and the premises that lead to them. The graph shows this structure, with links back to the source sessions. You can also import notes.
+## Reconocimiento de Voz Offline con Rust
 
-Future teaching sessions can read the graph instead of starting from scratch. Practice sessions can draw their material from it. It stores the ideas and their connections, not ratings of your ability.
+LearnHarness incluye un motor nativo de reconocimiento de voz (Speech-to-Text) desarrollado en **Rust** mediante **NAPI-RS** y enlazado directamente a **whisper.cpp**.
 
-![LearnHarness knowledge graph](docs/assets/knowledge-graph.png)
+- **100% Offline y Privado:** Tu voz se procesa localmente en tu CPU con optimizaciones vectoriales (AVX2 / OpenMP). Ningún fragmento de audio viaja a servidores externos.
+- **Configuración en Español:** Configurado por defecto para transcribir en español utilizando el modelo GGML `whisper-small` (~466MB).
+- **Fallback a Deepgram:** Compatible con Deepgram opcionalmente si se prefiere utilizar reconocimiento en la nube.
 
-## Download and get started
+---
 
-**[Download from learnharness.ai](https://learnharness.ai)** · [GitHub Releases](https://github.com/amosblomqvist/learnharness/releases)
+## Instalación en Omarchy / Arch Linux
 
-- **macOS (Apple Silicon):** signed and notarized DMG. Drag the app to Applications.
-- **Windows (x64):** run the installer. It is currently unsigned; Windows may show an “unknown publisher” or SmartScreen warning.
-- **Linux (x64):** make the AppImage executable and open it, or install the Debian/Ubuntu `.deb`.
+Esta guía está diseñada específicamente para distribuciones basadas en Arch Linux (como **Omarchy** con **Hyprland** o entornos Wayland).
 
-Add your provider API key and choose your models, then start a session with what you want to understand. LearnHarness supports 30+ provider options, including OpenAI, Anthropic, Google, DeepSeek, and OpenRouter. Optional dictation and web search use separate service keys.
+### 1. Requisitos y Dependencias del Sistema
 
-All three platforms support in-app updates.
-
-## Your keys, your data
-
-- **Your keys and models.** No LearnHarness subscription or markup. You pay your providers for usage; a live cost meter shows model costs.
-- **Local storage.** Your chats, graph, settings, and API keys live on your machine. Learning records are plain files you can inspect.
-- **External services.** Models run through your configured providers. Model requests send the context needed for the task; web research and dictation also contact external services. Local storage does not mean offline processing.
-- **Inspectable behavior.** System prompts are visible and editable. The app is open source under the AGPL-3.0 license.
-
-## Development and support
+Instala las herramientas de compilación, Rust, Node.js y las librerías necesarias mediante `pacman`:
 
 ```bash
-npm install
-npm run dev        # http://localhost:3000
-npm test           # deterministic, no LLM, no network
+sudo pacman -S --needed base-devel git nodejs npm rust cargo cmake clang
 ```
 
-See the [development guide](docs/development.md), [architecture](docs/architecture.md), and [desktop release guide](docs/desktop-release.md).
+### 2. Clonación del Repositorio e Instalación
 
-Questions, bug reports, and feature requests: [GitHub Issues](https://github.com/amosblomqvist/learnharness/issues).
+```bash
+git clone https://github.com/gabexe/learnharness.git
+cd learnharness
+npm install
+```
 
-## License
+### 3. Compilación del Módulo Nativo de Rust
 
-[AGPL-3.0](LICENSE)
+Compila el addon nativo de Whisper en modo release:
 
-The app is free and open forever. If we ever charge for anything, it will be for convenience — managed keys, hosting — never for features you can run locally.
+```bash
+npm run build:whisper
+```
+
+Esto generará el módulo optimizado en `native/whisper.node`.
+
+### 4. Descarga del Modelo Whisper (Español)
+
+Descarga el modelo GGML `whisper-small` en la ruta estándar de caché de LearnHarness:
+
+```bash
+mkdir -p ~/.cache/learnharness/models
+curl -L -o ~/.cache/learnharness/models/ggml-small.bin \
+  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin
+```
+
+*(Opcional: Si prefieres ubicarlo en otro directorio, puedes definir la variable de entorno `export WHISPER_MODEL_PATH="/ruta/a/ggml-small.bin"`).*
+
+### 5. Configuración de Claves de IA (BYOK)
+
+LearnHarness utiliza el principio *Bring Your Own Key* (BYOK), lo que te permite pagar directamente el costo base del proveedor sin suscripciones intermedias.
+
+Copia o crea tu archivo de autenticación:
+
+```bash
+# Ejemplo usando OpenRouter o OpenAI
+cat << 'EOF' > auth.json
+{
+  "OPENROUTER_API_KEY": "sk-or-v1-..."
+}
+EOF
+chmod 600 auth.json
+```
+
+También puedes ingresar tus claves directamente desde la interfaz gráfica en **Configuración → Claves de API**.
+
+### 6. Ejecución en Omarchy (Wayland / Hyprland)
+
+Para ejecutar la aplicación de escritorio en entornos Wayland (como Hyprland en Omarchy), utiliza el flag de Ozone para aceleración nativa:
+
+```bash
+ELECTRON_OZONE_PLATFORM_HINT=auto npm run desktop:dev
+```
+
+Para ejecutar en modo navegador web tradicional:
+
+```bash
+npm run dev
+# Accede a http://localhost:3000
+```
+
+### 7. Empaquetado para Linux (AppImage)
+
+Para generar el ejecutable portable standalone (`.AppImage`):
+
+```bash
+npm run desktop:dist:linux
+```
+
+El binario resultante se generará en la carpeta `dist/`.
+
+---
+
+## Pruebas y Verificación
+
+El repositorio cuenta con una suite completa de pruebas unitarias y de integración:
+
+```bash
+npm test
+```
+
+---
+
+## Licencia
+
+Este proyecto está licenciado bajo la **AGPL-3.0**. Consulta [LICENSE](LICENSE) para más detalles.
+El software es libre y abierto para siempre.

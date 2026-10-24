@@ -25,6 +25,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AUTH_KEYS, type AuthKeyStatus } from "@/src/core";
+import { useI18n } from "@/components/i18n-context";
 import { SettingsGroup } from "./controls.tsx";
 import { ChatGPTConnection } from "./chatgpt-connection.tsx";
 import { ProviderMenuList } from "./model-menu.tsx";
@@ -478,6 +479,7 @@ export function KeysSection({
 						testid={`key-${status.id.toLowerCase()}`}
 					/>
 				))}
+				{label === "Dictation" && <WhisperStatusRow />}
 			</SettingsGroup>)}
 
 		</>
@@ -536,5 +538,101 @@ function AddProviderEditor({
 				</p>
 			)}
 		</>
+	);
+}
+
+function WhisperStatusRow() {
+	const { t } = useI18n();
+	const [status, setStatus] = useState<{
+		available: boolean;
+		modelExists: boolean;
+		defaultModelPath?: string;
+	} | null>(null);
+	const [downloading, setDownloading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+
+	const fetchStatus = () => {
+		fetch("/api/stt/status")
+			.then((r) => r.json())
+			.then((data) => setStatus(data))
+			.catch(() => setStatus(null));
+	};
+
+	useEffect(() => {
+		fetchStatus();
+	}, []);
+
+	const handleDownload = async () => {
+		setDownloading(true);
+		setError(null);
+		try {
+			const res = await fetch("/api/stt/status", { method: "POST" });
+			const data = (await res.json()) as { error?: string };
+			if (!res.ok) {
+				setError(data.error ?? "Error al descargar modelo");
+			} else {
+				fetchStatus();
+			}
+		} catch (e) {
+			setError(e instanceof Error ? e.message : "Error al descargar modelo");
+		} finally {
+			setDownloading(false);
+		}
+	};
+
+	return (
+		<div
+			data-testid="whisper-status-row"
+			className="mt-2 flex flex-col gap-1.5 rounded-md border border-border/40 bg-card/40 p-2.5"
+		>
+			<div className="flex items-center justify-between gap-3">
+				<div className="flex flex-col">
+					<span className="font-ui text-xs font-medium text-foreground">
+						{t.settings.whisperModel}
+					</span>
+					<span className="text-[11px] text-muted-foreground">
+						{t.settings.whisperModelDesc}
+					</span>
+				</div>
+				<div className="flex items-center gap-2">
+					{status?.modelExists ? (
+						<span
+							data-testid="whisper-model-installed"
+							className="inline-flex items-center gap-1 rounded bg-green-500/10 px-2 py-0.5 text-[11px] font-medium text-green-600 dark:text-green-400"
+						>
+							✓ {t.settings.whisperModelInstalled}
+						</span>
+					) : (
+						<div className="flex items-center gap-2">
+							<span
+								data-testid="whisper-model-missing"
+								className="text-[11px] text-muted-foreground"
+							>
+								{t.settings.whisperModelMissing}
+							</span>
+							<button
+								type="button"
+								onClick={handleDownload}
+								disabled={downloading}
+								data-testid="whisper-model-download"
+								className="rounded border border-border bg-card px-2 py-0.5 text-xs text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+							>
+								{downloading ? t.common.loading : t.settings.downloadModel}
+							</button>
+						</div>
+					)}
+				</div>
+			</div>
+			{status?.defaultModelPath && (
+				<span className="truncate font-mono text-[10px] text-muted-foreground/60">
+					{status.defaultModelPath}
+				</span>
+			)}
+			{error && (
+				<p role="alert" className="text-xs text-red-500">
+					{error}
+				</p>
+			)}
+		</div>
 	);
 }
