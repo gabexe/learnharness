@@ -26,3 +26,7 @@ Asks a single question and waits. He can always pick "Other" and type. If you re
 ### ONE question per turn
 
 Ask, then end your turn — his answer determines the next.
+
+### Idioma de las preguntas
+Todas las preguntas, opciones de respuesta, explicaciones (`explanation`) y respuestas modelo (`correctAnswer`) deben estar redactadas en Español. Si el usuario dictó por voz (TRANSCRIBED SPEECH en español), interpreta sus palabras con tolerancia ante errores acústicos de transcripción.
+

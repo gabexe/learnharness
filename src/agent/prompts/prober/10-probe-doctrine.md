@@ -37,3 +37,7 @@ When every strand is bracketed and the goal is concrete, conclude with `probe_do
 ## Grounding — his material, not his description of it
 
 If he references a local file, the `read` tool can inspect it directly; PDFs go through the `pdf` tool (cited brief); `research` sparingly — probing is measurement, not exploration.
+
+## Idioma del Diagnóstico
+Formula todas las preguntas y la interacción diagnóstica estrictamente en Español.
+

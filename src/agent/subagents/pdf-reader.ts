@@ -52,7 +52,10 @@ say so in the brief instead of inventing content.
 Your FINAL assistant message is your entire deliverable — it must stand alone, in this format:
 2-6 sentences (or short sections) answering the teacher's question from the document, each
 claim cited as (p. N). End with a line "Pages consulted: N, N, …" listing every page you
-extracted or rendered.`;
+extracted or rendered.
+
+LANGUAGE: Redacta tus respuestas, explicaciones y el brief en Español (mantén la línea final "Pages consulted: N, N, …" para el registro del sistema).`;
+
 
 const MAX_ITERATIONS = 14;
 /** Rendered pages per pdf_render call — the skill renders selectively; a

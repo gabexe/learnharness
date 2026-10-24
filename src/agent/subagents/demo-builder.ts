@@ -73,7 +73,9 @@ THE HOUSE RULE — never deliver untested:
 4. Only then finish. Your final message is 1-3 sentences of NOTES for the teacher (what the demo shows,
    its controls, what to try) — NEVER the HTML itself.
 
-Never claim success you did not see: a PASSED run_demo is the only definition of done.`;
+Never claim success you did not see: a PASSED run_demo is the only definition of done.
+
+LANGUAGE: Todos los textos visibles para el usuario en la demo (etiquetas, controles, instrucciones) y tus notas finales para el profesor deben estar en Español.`;
 
 interface BuilderState {
 	html: string | null;

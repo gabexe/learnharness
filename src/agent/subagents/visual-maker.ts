@@ -91,7 +91,10 @@ SVG requirements:
 
 Your FINAL message: 1-2 sentences of notes for the teacher (what the figure shows, any caveats) —
 NEVER the SVG source itself. If you genuinely cannot make a correct picture of the brief, say exactly
-that in your final message and why.`;
+that in your final message and why.
+
+LANGUAGE: Todos los textos y etiquetas dentro del SVG y tus notas finales para el profesor deben estar en Español.`;
+
 
 /** The wire declarations (pi-ai Tool, TypeBox parameters): this loop owns
  *  execution itself — write/edit dispatch inline below, render feeds the

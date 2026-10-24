@@ -116,6 +116,8 @@ mac:
   # don't depend on locales). Revisit only if localization ever lands.
   electronLanguages:
     - en
+    - es
+
   category: public.app-category.education
   # Laid for the STT milestone (researcher-verified): the TCC mic prompt
   # reads this string; macOS asks regardless of Electron's own handlers.

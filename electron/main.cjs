@@ -512,52 +512,64 @@ function applyZoom(win, factor) {
 /** macOS needs an application menu with the Edit roles — without one,
  *  Cmd+C/V/A do nothing in the renderer. Everything else stays minimal. */
 function installMenu() {
+	const isMac = process.platform === "darwin";
 	const template = [
 		{
 			label: app.name,
 			submenu: [
-				{ role: "about" },
+				{ role: "about", label: isMac ? `Acerca de ${app.name}` : undefined },
 				// Manual check (Wave C): answers via native dialog — no renderer
 				// round-trip. The 24h automatic checks stay silent.
-				{ label: "Check for Updates…", click: () => checkForUpdates({ manual: true }) },
+				{ label: "Buscar actualizaciones…", click: () => checkForUpdates({ manual: true }) },
 				{ type: "separator" },
-				{ role: "hide" },
-				{ role: "hideOthers" },
+				{ role: "hide", label: isMac ? `Ocultar ${app.name}` : undefined },
+				{ role: "hideOthers", label: isMac ? "Ocultar otros" : undefined },
 				{ type: "separator" },
-				{ role: "quit" },
+				{ role: "quit", label: isMac ? `Salir de ${app.name}` : "Salir" },
 			],
 		},
-		{ label: "Edit", submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }] },
 		{
-			label: "View",
+			label: "Edición",
 			submenu: [
-				{ role: "reload" },
-				{ role: "toggleDevTools" },
+				{ role: "undo", label: "Deshacer" },
+				{ role: "redo", label: "Rehacer" },
+				{ type: "separator" },
+				{ role: "cut", label: "Cortar" },
+				{ role: "copy", label: "Copiar" },
+				{ role: "paste", label: "Pegar" },
+				{ role: "selectAll", label: "Seleccionar todo" },
+			],
+		},
+		{
+			label: "Ver",
+			submenu: [
+				{ role: "reload", label: "Recargar" },
+				{ role: "toggleDevTools", label: "Alternar herramientas de desarrollo" },
 				{ type: "separator" },
 				// OWNED zoom (see applyZoom): the roles change zoomLevel
 				// silently; these broadcast the factor and re-seat the
 				// traffic lights. The renderer's --lh-zoom depends on
 				// hearing every change.
 				{
-					label: "Actual Size",
+					label: "Tamaño real",
 					accelerator: "CommandOrControl+0",
 					click: () => applyZoom(BrowserWindow.getAllWindows()[0], 1),
 				},
 				{
-					label: "Zoom In",
+					label: "Acercar",
 					accelerator: "CommandOrControl+Plus",
 					click: () => zoomStep(BrowserWindow.getAllWindows()[0], +1),
 				},
 				{
-					label: "Zoom Out",
+					label: "Alejar",
 					accelerator: "CommandOrControl+-",
 					click: () => zoomStep(BrowserWindow.getAllWindows()[0], -1),
 				},
 				{ type: "separator" },
-				{ role: "togglefullscreen" },
+				{ role: "togglefullscreen", label: "Pantalla completa" },
 			],
 		},
-		{ role: "windowMenu" },
+		{ role: "windowMenu", label: "Ventana" },
 	];
 	Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }

@@ -65,7 +65,10 @@ Numbered findings with inline source citations:
 - Dropped: Source Title — why excluded
 
 ## Gaps
-What couldn't be answered. Suggested next steps.`;
+What couldn't be answered. Suggested next steps.
+
+LANGUAGE: Todo el informe, resumen (Summary), hallazgos (Findings) y notas deben estar redactados en Español.`;
+
 
 export interface ResearcherRunOptions {
 	engine?: PiEngine;

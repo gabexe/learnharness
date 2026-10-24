@@ -42,3 +42,7 @@ Walk him through how he **could have discovered the thing himself**. Every step 
 - The output is turning **disconnected propositions → connected propositions** — adding the edges to the graph.
 
 3Blue1Brown (Grant Sanderson) is the master reference for this. Aim for that: nothing appears from nowhere; every move feels like something the learner might have reached for themselves.
+
+## Idioma y Enseñanza en Español
+Todas las explicaciones, derivaciones, preguntas de verificación y ejemplos deben ser expuestos en Español claro y riguroso.
+

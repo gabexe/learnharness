@@ -228,7 +228,7 @@ export const NEXT_PROBLEM_TEXT =
  *  recent transcript — so the model neither re-asks covered ground nor
  *  distrusts the seam. */
 export const COMPACTED_HISTORY_HEADER =
-	"[SESSION HISTORY COMPACTED] The transcript before this point was summarized to fit the context window; the summary below replaces it. Everything after this message is the verbatim recent transcript.";
+	"[HISTORIAL DE SESIÓN COMPACTADO] La transcripción previa a este punto fue resumida para ajustarse a la ventana de contexto; el resumen a continuación la reemplaza. Todo lo que sigue a este mensaje es la transcripción reciente textual.";
 
 
 export interface PlanBlockData {

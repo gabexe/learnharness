@@ -426,7 +426,9 @@ submission OR existing ids from THE GRAPH SO FAR, verbatim. Premises within one 
 TOGETHER — independent arguments for the same conclusion are separate chains. A conclusion may
 reappear, by id, as a premise of later chains. A bare idea that no argument uses rides the
 propositions list alone. Include every field even when empty — "chains": [] when the source makes no
-arguments. The tool's field descriptions carry the details.`;
+arguments. The tool's field descriptions carry the details.
+
+LANGUAGE: All proposition names, statements, and descriptions in your submission MUST be written in Spanish.`;
 
 export const EXTRACTOR_INSTRUCTIONS = `${SESSION_PREAMBLE}\n\n${EXTRACTION_CORE}\n\n${SESSION_MESSAGE_ID_RULE}`;
 export const NOTES_EXTRACTOR_INSTRUCTIONS = `${NOTES_PREAMBLE}\n\n${EXTRACTION_CORE}`;

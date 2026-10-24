@@ -380,25 +380,25 @@ export function buildCompactionPrompt(input: {
 }): string {
 	const planSection =
 		input.planTreeText ?? "No plan tree exists in this session (nothing was persisted).";
-	return `You are compacting the earlier part of a tutoring session — writing the summary your future self will read INSTEAD of that transcript. Everything before the cut is replaced by what you write; everything after stays verbatim. The learner's transcript below labels the learner as [LEARNER], the tutoring agent as [TUTOR], tool traffic as [RESULT …]/[SYSTEM NOTE].
+	return `Estás compactando la parte previa de una sesión de aprendizaje — escribiendo el resumen que leerás en el futuro en LUGAR de esa transcripción completa. Todo lo anterior al corte es reemplazado por lo que redactes; lo posterior permanece textual. Redacta el resumen estrictamente en Español. La transcripción a continuación identifica al estudiante como [LEARNER], al tutor como [TUTOR] y herramientas como [RESULT …]/[SYSTEM NOTE].
 
-Write the summary with EXACTLY these sections, in this order:
+Escribe el resumen con EXACTAMENTE estas cuatro secciones, en este orden:
 
-## The learner's understanding
-The most detailed picture you can give of what this learner knows and how that EVOLVED across the session: what they answered and how well (quiz outcomes, correct reasoning, mistakes), their stated or displayed confidence, misconceptions that surfaced, which were corrected and which still stand. This section carries the most weight — future teaching decisions hang on it.
+## La comprensión del estudiante (The learner's understanding)
+La imagen más detallada posible de lo que este estudiante comprende y cómo EVOLUCIONÓ durante la sesión: lo que respondió y qué tan bien (resultados de cuestionarios, razonamientos correctos, errores), su confianza mostrada, conceptos erróneos detectados, cuáles se corrigieron y cuáles persisten. Esta sección es la más importante.
 
-## The teaching arc
-How the session progressed: what was covered and in what order, which explanations landed and which didn't, how the learner responded, where the momentum went. Include probe-phase findings if present.
+## El arco de enseñanza (The teaching arc)
+Cómo progresó la sesión: qué temas se cubrieron y en qué orden, qué explicaciones funcionaron y cuáles no, cómo respondió el estudiante y el ritmo del aprendizaje.
 
-## The plan dependency tree
-Reproduce the session's current plan tree verbatim from the structure below — do not drop nodes, edges, or statuses.
+## El árbol de dependencias del plan (The plan dependency tree)
+Reproduce el árbol del plan actual de la sesión textualmente a partir de la siguiente estructura:
 
 ${planSection}
 
-## The current moment
-What is happening RIGHT NOW at the cut: any question or problem awaiting the learner's answer, any commitment the agent has made that a later turn must honor, and the immediate next step.
+## El momento actual (The current moment)
+Qué está sucediendo EXACTAMENTE AHORA en el punto de corte: cualquier pregunta o problema esperando respuesta del estudiante, cualquier compromiso del agente y el siguiente paso inmediato.
 
-Rules: no praise, no filler, no speculation beyond the transcript. Every claim about the learner must be traceable to what they actually said or answered. Keep every identifier (proposition ids, node ids, file paths) exact.
+Reglas: Redacta en Español. Sin elogios ni relleno. Toda afirmación debe ser verificable en la transcripción. Conserva los identificadores exactos.
 
 TRANSCRIPT TO SUMMARIZE:
 
