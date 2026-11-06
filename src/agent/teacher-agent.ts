@@ -70,13 +70,25 @@ export type AgentKind = "prober" | "teacher" | "practice";
  *  tests/prompt-overrides.test.ts). Overrides are a static-file read
  *  through config paths, not request state — the store import carries no
  *  chat/job machinery. */
-export function composeInstructions(kind: AgentKind, switches?: Record<string, boolean>): string {
+export function composeInstructions(
+	kind: AgentKind,
+	switches?: Record<string, boolean>,
+	language?: string,
+): string {
 	const segments = effectivePromptSegments(kind, switches ?? {});
-	return segments
+	let result = segments
 		.map((s) => (s.enabled ? s.overrideText! : s.sourceText))
 		.map((t) => t.trim())
 		.filter(Boolean)
 		.join("\n\n---\n\n");
+
+	if (language === "en") {
+		result = result.replace(
+			/## Idioma y Comunicación[\s\S]*?(?=\n\n---|\n\n##|$)/i,
+			`## Language & Communication\nYou must communicate and respond ALWAYS in English, unless the user explicitly requests to learn another foreign language (in which case pedagogical explanations remain in English and examples in the target language). All vocabulary, feedback, questions, explanations, and pedagogical reasoning must be expressed in clear, natural, and rigorous English.`
+		);
+	}
+	return result;
 }
 
 // The switch-free source composition, cached per kind (module-load once).
@@ -126,6 +138,8 @@ export interface AgentBuildOptions {
 	 *  <chatId>.jsonl via providerEventObserver — the GLM-truncation /
 	 *  DeepSeek-id incident layer. Absent or env-off → no observer. */
 	chatId?: string;
+	/** App language preference ("es" | "en") — determines system prompt communication language. */
+	language?: "es" | "en";
 }
 
 /**
@@ -174,8 +188,8 @@ function baseAgentOptions(kind: AgentKind, opts: AgentBuildOptions, tools: Agent
 	// ("practice" is not a ModelRole) honest about that.
 	const engine = opts.engine ?? piEngineFor(kind as "prober" | "teacher");
 	const stopper = makeQuestionStopper();
-	const systemPrompt = opts.promptSwitches
-		? composeInstructions(kind, opts.promptSwitches)
+	const systemPrompt = opts.promptSwitches || opts.language
+		? composeInstructions(kind, opts.promptSwitches, opts.language)
 		: composedInstructions[kind]!;
 	// Debug recorder (owner, 2026-10-04): raw provider events when
 	// LH_PROVIDER_EVENTS=1 and the caller handed a chatId; undefined is

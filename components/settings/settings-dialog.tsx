@@ -36,12 +36,15 @@ import {
 	type AgentSettings,
 	type AppearanceSettings,
 	type CompactionSettings,
+	type GeneralSettings,
 	type GraphSettings,
 	type UserSettings,
 } from "@/src/core";
+import { useI18n } from "@/components/i18n-context";
 import { useAppearance } from "./appearance.tsx";
 import { SettingsSection, SettingsRow, Toggle } from "./controls.tsx";
 import { AgentSection } from "./agent-section.tsx";
+import { GeneralSection } from "./general-section.tsx";
 import type { ModelsSettings } from "@/src/core";
 import { MENU_CLOSE_EVENT, MENU_OPEN_EVENT } from "@/components/menu-shell";
 import { notifySettingsSaved } from "@/components/settings-signal";
@@ -63,6 +66,23 @@ const SECTIONS = [
 	{ id: "general", label: "General" },
 ] as const;
 type SectionId = (typeof SECTIONS)[number]["id"];
+
+function getSectionLabel(id: SectionId, t: ReturnType<typeof useI18n>["t"]) {
+	switch (id) {
+		case "keys":
+			return t.settings.keys;
+		case "agent":
+			return t.settings.agent;
+		case "appearance":
+			return t.settings.appearance;
+		case "graph":
+			return t.settings.graph;
+		case "keyboard":
+			return t.settings.keyboard;
+		case "general":
+			return t.settings.general;
+	}
+}
 
 /** `open(section?, row?)` — the optional ROW deep-links into the Keys
  *  section with that row unfolded (zero-keys wave: the dictation error's
@@ -143,6 +163,7 @@ export function SettingsDialogBody({
 	 *  retargets follow it exactly like initialSection below. */
 	initialRow?: string | null;
 }) {
+	const { t } = useI18n();
 	const { onAppearanceChange } = useAppearance();
 	const [record, setRecord] = useState<UserSettings | null | undefined>(
 		undefined,
@@ -273,10 +294,10 @@ export function SettingsDialogBody({
 		>
 			{/* Header — the app's quiet CMU title language. */}
 			<header className="flex h-15 shrink-0 items-center gap-3 border-b border-border px-5">
-				<h2 className="font-title text-2xl tracking-tight">Settings</h2>
+				<h2 className="font-title text-2xl tracking-tight">{t.settings.title}</h2>
 				<Hint
 						// Esc closes the dialog (its own listener) — surface it.
-						label="Close"
+						label={t.common.close}
 						binding="escape"
 						side="left"
 					>
@@ -321,7 +342,7 @@ export function SettingsDialogBody({
 							}`}
 							onClick={() => setActive(s.id)}
 						>
-							{s.label}
+							{getSectionLabel(s.id, t)}
 						</button>
 					))}
 				</nav>
@@ -431,11 +452,24 @@ export function SettingsDialogBody({
 							)}
 							{active === "keyboard" && (
 								<SettingsSection
-									title="Keyboard"
-									hint="Stored on this device"
+									title={t.settings.keyboard}
+									hint={t.settings.keyboardStoredHint}
 									testid="section-keyboard"
 								>
 									<KeyboardSection />
+								</SettingsSection>
+							)}
+							{active === "general" && (
+								<SettingsSection
+									title={t.settings.general}
+									testid="section-general"
+								>
+									<GeneralSection
+										general={record.general}
+										onSectionChange={(next: GeneralSettings) =>
+											void write("general", next)
+										}
+									/>
 								</SettingsSection>
 							)}
 						</div>

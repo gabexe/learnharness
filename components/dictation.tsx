@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2Icon, MicIcon } from "lucide-react";
 import { useSettingsDialog } from "@/components/settings/settings-dialog";
 import { Hint } from "@/components/ui/hint";
+import { useI18n } from "@/components/i18n-context";
 
 /**
  * Voice dictation — the cloud engine (STT wave 1, 2026-09-17).
@@ -138,6 +139,28 @@ async function mintFreshToken(): Promise<string> {
  *  refresh() re-mints in the background (page mount, run end); its
  *  failures are silently tolerated (a keyless pre-mint just doesn't warm). */
 export const WARM_TOKEN_TTL_MS = 3 * 60_000;
+
+let localSttCache: { available: boolean; modelExists: boolean; at: number } | null = null;
+
+export async function checkLocalWhisperStt(): Promise<boolean> {
+	const now = Date.now();
+	if (localSttCache && now - localSttCache.at < 15_000) {
+		return localSttCache.available && localSttCache.modelExists;
+	}
+	try {
+		const res = await fetch("/api/stt/status");
+		if (res.ok) {
+			const data = (await res.json()) as { available?: boolean; modelExists?: boolean };
+			localSttCache = {
+				available: !!data.available,
+				modelExists: !!data.modelExists,
+				at: now,
+			};
+			return localSttCache.available && localSttCache.modelExists;
+		}
+	} catch {}
+	return false;
+}
 
 export type WarmMinter = { mint: () => Promise<string>; refresh: () => void };
 
@@ -285,6 +308,7 @@ export type Dictation = {
  * question waits.
  */
 export function useDictation({ append }: { append: (text: string) => void }): Dictation {
+	const { t, language } = useI18n();
 	const [phase, setPhase] = useState<DictationPhase>("idle");
 	const [error, setError] = useState<string | null>(null);
 	/** Latest RMS from the worklet — the meter samples this (dictate pattern). */
@@ -312,6 +336,8 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
 	/** The deferred transcript (owner round 2): finals land here during the
 	 *  run and flush into the primary input once, at teardown. */
 	const bufferRef = useRef<string[]>([]);
+	const localPcmFramesRef = useRef<ArrayBuffer[]>([]);
+	const isLocalModeRef = useRef(false);
 	/** Resolvers waiting for the run to fully end (finish(), owner
 	 *  2026-10-01): released by cleanup() — every terminal path runs it. */
 	const waitersRef = useRef<Array<() => void>>([]);
@@ -330,6 +356,8 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
 	const cleanup = useCallback(() => {
 		genRef.current++;
 		dictationActiveFlag = false;
+		localPcmFramesRef.current = [];
+		isLocalModeRef.current = false;
 		flush(); // the deferred transcript appears when the run ends (owner round 2)
 		if (safetyRef.current) {
 			clearTimeout(safetyRef.current);
@@ -437,11 +465,12 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
 		// Mitigation D: the warm token (pre-minted at mount / after the last
 		// run) resolves ~instantly; a cold/keyless mint surfaces below. The
 		// mic is the long pole (macOS HAL + APM init) and gates everything —
-		// the token runs concurrently with it. 127.0.0.1 is a secure
+		// the token and local STT check run concurrently with it. 127.0.0.1 is a secure
 		// context, so getUserMedia works without TLS; macOS TCC prompts on
 		// first use.
 		const tokenPromise = warmTokens.mint();
 		tokenPromise.catch(() => {}); // surfaced below; no unhandled rejection
+		const localSttPromise = checkLocalWhisperStt();
 		const micPromise = navigator.mediaDevices.getUserMedia({
 			audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
 		});
@@ -467,13 +496,14 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
 				const msg = e.data as { type: string; rms?: number; buffer?: ArrayBuffer };
 				if (msg.type === "level") {
 					levelRef.current = msg.rms ?? 0; // never reset to zero (dictate pattern)
-				} else if (msg.type === "audio") {
+				} else if (msg.type === "audio" && msg.buffer) {
+					localPcmFramesRef.current.push(msg.buffer);
 					const ws = wsRef.current;
-					if (ws && ws.readyState === WebSocket.OPEN) ws.send(msg.buffer!);
+					if (ws && ws.readyState === WebSocket.OPEN) ws.send(msg.buffer);
 					// Mitigation A: not OPEN yet (handshake or reconnect gap) —
 					// queue, capped; the open handler flushes in order.
-					else {
-						pendingRef.current.push(msg.buffer!);
+					else if (!isLocalModeRef.current) {
+						pendingRef.current.push(msg.buffer);
 						if (pendingRef.current.length > 256) pendingRef.current.shift();
 					}
 				}
@@ -496,7 +526,17 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
 			cleanup();
 			return;
 		}
+
+		// Check if local Whisper STT is available and model exists
+		const localAvailable = await localSttPromise;
 		if (gen !== genRef.current) return;
+
+		if (localAvailable) {
+			isLocalModeRef.current = true;
+			setPhase("recording");
+			return;
+		}
+
 		let token: string;
 		try {
 			token = await tokenPromise;
@@ -512,7 +552,7 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
 		openSocket(gen, token);
 	}, [openSocket, cleanup]);
 
-	const stop = useCallback(() => {
+	const stop = useCallback(async () => {
 		const gen = genRef.current;
 		if (phase !== "recording" && phase !== "connecting") return;
 		setPhase("stopping");
@@ -525,6 +565,39 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
 		sourceRef.current = null;
 		workletRef.current?.disconnect();
 		workletRef.current = null;
+
+		if (isLocalModeRef.current) {
+			const frames = localPcmFramesRef.current;
+			localPcmFramesRef.current = [];
+			if (frames.length > 0) {
+				try {
+					const totalBytes = frames.reduce((acc, f) => acc + f.byteLength, 0);
+					const merged = new Uint8Array(totalBytes);
+					let offset = 0;
+					for (const f of frames) {
+						merged.set(new Uint8Array(f), offset);
+						offset += f.byteLength;
+					}
+					const res = await fetch(`/api/stt/transcribe?lang=${encodeURIComponent(language)}`, {
+						method: "POST",
+						headers: { "Content-Type": "application/octet-stream" },
+						body: merged,
+					});
+					if (res.ok) {
+						const data = (await res.json()) as { text?: string };
+						if (data.text) bufferRef.current.push(data.text);
+					} else {
+						const errData = (await res.json().catch(() => ({}))) as { error?: string };
+						setError(errData.error ?? t.dictation.failed);
+					}
+				} catch (e) {
+					console.warn("[dictation] local transcribe error:", e);
+					setError(t.dictation.failed);
+				}
+			}
+			if (gen === genRef.current) cleanup();
+			return;
+		}
 
 		const ws = wsRef.current;
 		if (ws && ws.readyState === WebSocket.OPEN) {
@@ -622,6 +695,7 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
  *             (full text in the tooltip), cleared on the next click.
  */
 export function DictationBar({ dictation }: { dictation: Dictation }) {
+	const { t } = useI18n();
 	const { phase, error, levelRef, toggle, active, clearError } = dictation;
 	const { open: openSettings } = useSettingsDialog();
 	/** The keyless click (zero-keys wave, owner dictation trio): the errored
@@ -699,7 +773,7 @@ export function DictationBar({ dictation }: { dictation: Dictation }) {
 			className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-border/50 bg-card/50 text-xs text-muted-foreground/70 shadow-lg backdrop-blur transition-colors hover:border-border hover:text-muted-foreground"
 			>
 					<MicIcon className="size-3.5" />
-					<span className="max-w-full truncate">{error ?? "Dictate"}</span>
+					<span className="max-w-full truncate">{error ?? t.dictation.dictate}</span>
 				</button>
 			</Hint>
 		);
@@ -710,14 +784,14 @@ export function DictationBar({ dictation }: { dictation: Dictation }) {
 			<Hint
 				// The owner flagged this copy good ("Stop dictation (Esc)") —
 				// kept verbatim; only the machinery moved to the styled tooltip.
-				label="Stop dictation (Esc)"
+				label={t.dictation.stopDictation}
 				side="top"
 			>
 				<button
 					type="button"
 					onClick={toggle}
 					disabled={phase === "stopping"}
-					aria-label="Stop dictation"
+					aria-label={t.dictation.stop}
 				data-testid="dictation-toggle"
 				className="flex h-7 shrink-0 items-center gap-1.5 rounded-md bg-destructive/10 px-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20"
 			>
@@ -726,7 +800,7 @@ export function DictationBar({ dictation }: { dictation: Dictation }) {
 				) : (
 					<MicIcon className="size-3.5" />
 				)}
-					Stop
+					{t.dictation.stop}
 				</button>
 			</Hint>
 			<span className="size-1.5 shrink-0 animate-pulse rounded-full bg-destructive" aria-hidden />

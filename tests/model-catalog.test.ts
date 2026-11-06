@@ -62,7 +62,7 @@ describe("the model catalog projection", () => {
 			assert.ok(typeof m.cost.input === "number" && typeof m.cost.output === "number");
 			assert.ok(m.contextWindow > 0);
 		}
-		const glm = models.find((m) => m.id === "z-ai/glm-5.3-flash");
+		const glm = models.find((m) => m.id === "z-ai/glm-5.3-flash" && m.provider === "openrouter");
 		assert.ok(glm, "glm-5.3-flash in catalog");
 		assert.deepEqual(glm!.supportedLevels, ["low", "high", "max"]);
 		assert.deepEqual(glm!.input, ["text", "image"]);
